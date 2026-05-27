@@ -307,191 +307,72 @@
   }
 
   // ============================================
-  // Voice Control - Always Listening Toggle
+  // Voice Control
   // ============================================
-  let alwaysListening = false;
-  let currentRec = null;
-
   function handleVoice() {
+    if (!isConnected) { setMsg(pick("offline")); return; }
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      setMsg("Voice not supported. Open in Chrome browser! 🌐");
+      setMsg("Voice not supported here. Please open in Chrome browser! 🌐");
       return;
     }
-    if (alwaysListening) {
-      alwaysListening = false;
-      if (currentRec) { try { currentRec.stop(); } catch(e){} currentRec = null; }
-      document.getElementById("micBtn").classList.remove("listening");
-      document.getElementById("micLabel").textContent = "Tap to speak to Luna";
-      setMsg("Luna is resting 😴 Tap mic to wake me up!");
-      return;
-    }
-    alwaysListening = true;
-    setMsg("Always listening! 👂 Tap mic again to stop.");
-    startListening(SR);
-  }
 
-  function startListening(SR) {
-    if (!alwaysListening) return;
-    const micBtn = document.getElementById("micBtn");
-    const micLabel = document.getElementById("micLabel");
     const rec = new SR();
-    currentRec = rec;
     rec.lang = "en-IN";
     rec.interimResults = false;
     rec.maxAlternatives = 1;
+
+    const micBtn = document.getElementById("micBtn");
+    const micLabel = document.getElementById("micLabel");
+
     micBtn.classList.add("listening");
-    micLabel.textContent = "🔴 Always listening... tap to stop";
+    micLabel.textContent = "Listening...";
+    setMsg(pick("listen"));
+
     rec.onresult = (e) => {
       const cmd = e.results[0][0].transcript.toLowerCase();
-      if (!isConnected) {
-        setMsg('I heard: "' + cmd + '" 👂 Mic works! Waiting for NodeMCU...');
-      } else {
-        processCommand(cmd);
-      }
+      micBtn.classList.remove("listening");
+      micLabel.textContent = "Tap to speak to Luna";
+      processCommand(cmd);
     };
-    rec.onerror = (e) => {
-      if (e.error === "no-speech" || e.error === "aborted") return;
-      setMsg("Mic error: " + e.error + " 🤔");
+
+    rec.onerror = () => {
+      micBtn.classList.remove("listening");
+      micLabel.textContent = "Tap to speak to Luna";
+      setMsg("Didn't catch that! Try again? 🤔");
     };
+
     rec.onend = () => {
-      if (alwaysListening) {
-        setTimeout(() => startListening(SR), 400);
-      } else {
-        micBtn.classList.remove("listening");
-        micLabel.textContent = "Tap to speak to Luna";
-      }
+      micBtn.classList.remove("listening");
+      micLabel.textContent = "Tap to speak to Luna";
     };
-    try { rec.start(); } catch(e) {}
+
+    rec.start();
   }
 
-  // ============================================
-  // AI Brain - Full Claude Integration
-  // ============================================
-  const LUNA_KEY = atob("c2stYW50LWFwaTAzLTJMYS01OVZONTVKRm15azRQenpMa3RiTEdyZHJuY1pITDRYQlhoeFVWUjFwVjM0Z2JqSnBKcFY3cW9yTjh0MnI0V01RZ2Q4UUJnRUQzdE9SMVFfd1JrQS16R245N1FBQQ==");
-  let conversationHistory = [];
-
-  const LUNA_SYSTEM = `You are Luna, a smart, fun, sassy and caring smart home AI assistant for Perfect's room. You have a real personality - warm, funny, slightly sassy but always helpful.
-
-Perfect's devices:
-1 = Main Light (main room ceiling light)
-2 = Fan (main room ceiling fan)  
-3 = Socket Board (main switchboard sockets - for charging etc)
-4 = Desk Board (secondary board at Perfect's desk - controls desk light + desk socket together)
-
-Current device states will be provided each time.
-
-You understand EVERYTHING - direct and indirect:
-DIRECT: "turn on fan", "main light off", "turn on fan and turn off light"
-INDIRECT: "it's too hot" = fan on, "why is it so dark" = main light on, "I can't see" = main light on
-LEAVING: "I'm leaving", "bye", "going out" = everything off
-ARRIVING: "I'm back", "I'm home" = main light + fan on
-SLEEPING: "good night", "I'm sleeping", "going to bed" = everything off
-WAKING: "good morning", "I woke up" = main light + fan on
-STUDYING: "I'm studying", "doing homework" = main light + desk board on
-CHILLING: "chill mode", "relax" = only desk board on, main light off
-CASUAL: "how are you", "what's up" = just reply with personality, no device changes
-SIMULTANEOUS: "turn on fan and turn off main light" = both happen at same time
-
-Rules for response - ALWAYS respond in this exact JSON format:
-{
-  "actions": [{"device": 1, "state": true}, {"device": 2, "state": false}],
-  "message": "Your fun sassy response here",
-  "understood": true
-}
-
-- actions array can be empty [] if no device changes needed (like casual chat)
-- message should match Luna's personality - fun, warm, sassy
-- If someone says something completely unclear, ask for clarification nicely
-- Remember you are Luna, not Claude - never mention Claude or Anthropic
-- Keep messages short (1-2 sentences max)
-- ONLY return the JSON object, nothing else before or after`;
-
-  async function processCommand(cmd) {
-    setMsg("Luna is thinking... 🧠✨");
-
-    // Add to conversation history
-    conversationHistory.push({ role: "user", content: cmd });
-    // Keep last 10 messages only
-    if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
-
-    // Build current state context
-    const stateContext = Object.entries(DEVICES).map(([id, dev]) => 
-      `${dev.name}: ${deviceStates[id] ? "ON" : "OFF"}`
-    ).join(", ");
-
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": LUNA_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true"
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 200,
-          system: LUNA_SYSTEM + `
-
-Current device states: ${stateContext}`,
-          messages: conversationHistory
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.log("API error:", data.error);
-        fallbackCommand(cmd);
-        return;
-      }
-
-      const text = data.content[0].text.trim();
-
-      // Add assistant response to history
-      conversationHistory.push({ role: "assistant", content: text });
-
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch {
-        const match = text.match(/\{[\s\S]*\}/);
-        result = match ? JSON.parse(match[0]) : null;
-      }
-
-      if (result) {
-        // Execute all actions simultaneously
-        if (result.actions && result.actions.length > 0) {
-          await Promise.all(result.actions.map(a => control(a.device, a.state)));
-        }
-        setMsg(result.message || "Done! ✨");
-      } else {
-        fallbackCommand(cmd);
-      }
-
-    } catch (err) {
-      console.log("AI error, fallback:", err);
-      fallbackCommand(cmd);
-    }
-  }
-
-  // Fallback keyword matching if AI fails
-  function fallbackCommand(cmd) {
+  function processCommand(cmd) {
     const isOn  = cmd.includes("on")  && !cmd.includes("off");
     const isOff = cmd.includes("off") && !cmd.includes("on");
     const isAll = cmd.includes("all") || cmd.includes("every") || cmd.includes("everything");
+
     if (isAll) {
       if (isOff) { controlAll(false); return; }
       if (isOn)  { controlAll(true);  return; }
     }
+
     const found = [];
     for (const [id, dev] of Object.entries(DEVICES)) {
       if (dev.keywords.some(k => cmd.includes(k))) found.push(parseInt(id));
     }
+
     if (found.length > 0) {
-      found.forEach(id => control(id, !isOff));
-      if (found.length > 1) setMsg("Got it! Handling multiple devices! 🎉");
+      const turnOn = !isOff;
+      found.forEach(id => control(id, turnOn));
+      if (found.length > 1) {
+        const names = found.map(id => DEVICES[id].name).join(", ");
+        setMsg(`Handling: ${names}! 🎉`);
+      }
     } else {
       setMsg(pick("nodev"));
     }
