@@ -4,152 +4,126 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <meta name="theme-color" content="#4f46e5"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Luna"/>
   <title>Luna - Smart Home</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      min-height: 100vh;
-      background: linear-gradient(160deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      padding: 20px;
-      padding-bottom: 40px;
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      min-height:100vh;
+      background:linear-gradient(160deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      padding:20px;padding-bottom:40px;
     }
-
-    /* Header */
-    .header { text-align: center; color: white; margin-bottom: 22px; }
-    .moon { font-size: 52px; line-height: 1; animation: glow 2s ease-in-out infinite; }
-    .header h1 { font-size: 42px; font-weight: 900; letter-spacing: 3px; margin: 4px 0 2px; }
-    .header p { font-size: 14px; opacity: 0.8; margin-bottom: 8px; }
-    .status-dot {
-      display: inline-block; width: 10px; height: 10px;
-      border-radius: 50%; margin-right: 6px; vertical-align: middle;
-      transition: all 0.4s ease;
+    .header{text-align:center;color:white;margin-bottom:22px}
+    .moon{font-size:52px;line-height:1;animation:glow 2s ease-in-out infinite;display:block}
+    .header h1{font-size:42px;font-weight:900;letter-spacing:3px;margin:4px 0 2px}
+    .header p{font-size:14px;opacity:0.8;margin-bottom:8px}
+    .status-row{display:flex;align-items:center;justify-content:center;gap:6px}
+    .status-dot{width:10px;height:10px;border-radius:50%;transition:all 0.4s ease;flex-shrink:0}
+    .status-text{font-size:13px;color:white;opacity:0.9}
+    .message-box{
+      background:white;border-radius:16px;padding:18px 20px;margin-bottom:24px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.2);min-height:64px;
+      display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;
     }
-    .status-text { font-size: 13px; opacity: 0.9; }
-
-    /* Message box */
-    .message-box {
-      background: white; border-radius: 16px;
-      padding: 18px 20px; margin-bottom: 24px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      min-height: 64px; display: flex;
-      align-items: center; justify-content: center;
-      transition: all 0.3s ease;
+    .message-box p{font-size:16px;color:#333;text-align:center;line-height:1.6;transition:opacity 0.3s}
+    .mic-section{display:flex;flex-direction:column;align-items:center;margin-bottom:30px}
+    .mic-btn{
+      width:110px;height:110px;border-radius:50%;border:none;
+      background:linear-gradient(135deg,#4facfe,#00f2fe);
+      box-shadow:0 8px 30px rgba(79,172,254,0.5);
+      cursor:pointer;transition:all 0.3s ease;
+      display:flex;align-items:center;justify-content:center;
     }
-    .message-box p { font-size: 16px; color: #333; text-align: center; line-height: 1.6; }
-
-    /* Mic button */
-    .mic-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-    .mic-btn {
-      width: 110px; height: 110px; border-radius: 50%; border: none;
-      background: linear-gradient(135deg, #4facfe, #00f2fe);
-      box-shadow: 0 8px 30px rgba(79,172,254,0.5);
-      cursor: pointer; transition: all 0.3s ease;
-      display: flex; align-items: center; justify-content: center;
+    .mic-btn.listening{
+      background:linear-gradient(135deg,#f093fb,#f5576c);
+      box-shadow:0 0 40px rgba(245,87,108,0.8);
+      transform:scale(1.1);animation:pulse 1.5s infinite;
     }
-    .mic-btn.listening {
-      background: linear-gradient(135deg, #f093fb, #f5576c);
-      box-shadow: 0 0 40px rgba(245,87,108,0.8);
-      transform: scale(1.1);
-      animation: pulse 1s infinite;
+    .mic-btn svg{width:52px;height:52px}
+    .mic-label{color:white;margin-top:12px;font-size:14px;opacity:0.85;text-align:center}
+    .timer-bar{
+      width:110px;height:4px;background:rgba(255,255,255,0.2);
+      border-radius:2px;margin-top:8px;overflow:hidden;
     }
-    .mic-btn svg { width: 52px; height: 52px; }
-    .mic-label { color: white; margin-top: 12px; font-size: 14px; opacity: 0.85; }
-
-    /* Device grid */
-    .devices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-    .device-btn {
-      background: rgba(255,255,255,0.12);
-      border: 1.5px solid rgba(255,255,255,0.25);
-      border-radius: 18px; padding: 22px 10px;
-      color: white; cursor: pointer; transition: all 0.3s ease;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 10px;
+    .timer-fill{
+      height:100%;background:rgba(255,255,255,0.8);
+      border-radius:2px;width:100%;
+      transition:width linear;
     }
-    .device-btn.on { border: none; transform: scale(1.03); }
-    .device-emoji { font-size: 36px; }
-    .device-name { font-size: 14px; font-weight: 700; }
-    .device-status {
-      font-size: 11px; opacity: 0.85;
-      background: rgba(255,255,255,0.15);
-      padding: 2px 12px; border-radius: 20px;
+    .devices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+    .device-btn{
+      background:rgba(255,255,255,0.12);
+      border:1.5px solid rgba(255,255,255,0.25);
+      border-radius:18px;padding:22px 10px;color:white;
+      cursor:pointer;transition:all 0.3s ease;
+      display:flex;flex-direction:column;align-items:center;gap:10px;
     }
-    .device-btn.on .device-status { background: rgba(0,0,0,0.2); }
-
-    /* All controls */
-    .all-controls { display: flex; gap: 12px; margin-bottom: 14px; }
-    .all-btn {
-      flex: 1; border: none; border-radius: 14px;
-      padding: 16px; color: white; font-weight: 700;
-      font-size: 15px; cursor: pointer; transition: all 0.3s ease;
+    .device-btn.on{border:none;transform:scale(1.03)}
+    .device-emoji{font-size:36px}
+    .device-name{font-size:14px;font-weight:700}
+    .device-status{
+      font-size:11px;opacity:0.85;
+      background:rgba(255,255,255,0.15);
+      padding:2px 12px;border-radius:20px;
     }
-    .all-on { background: linear-gradient(135deg, #84fab0, #08aeea); box-shadow: 0 4px 15px rgba(8,174,234,0.3); }
-    .all-off { background: linear-gradient(135deg, #fa709a, #fee140); box-shadow: 0 4px 15px rgba(250,112,154,0.3); }
-
-    /* Settings */
-    .settings-btn {
-      width: 100%; background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 12px; padding: 13px; color: white;
-      font-size: 13px; cursor: pointer; transition: all 0.3s ease;
+    .device-btn.on .device-status{background:rgba(0,0,0,0.2)}
+    .all-controls{display:flex;gap:12px;margin-bottom:14px}
+    .all-btn{
+      flex:1;border:none;border-radius:14px;padding:16px;
+      color:white;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.3s ease;
     }
-    .settings-panel {
-      margin-top: 12px; background: white;
-      border-radius: 14px; padding: 16px;
-      display: none;
+    .all-on{background:linear-gradient(135deg,#84fab0,#08aeea);box-shadow:0 4px 15px rgba(8,174,234,0.3)}
+    .all-off{background:linear-gradient(135deg,#fa709a,#fee140);box-shadow:0 4px 15px rgba(250,112,154,0.3)}
+    .settings-btn{
+      width:100%;background:rgba(255,255,255,0.15);
+      border:1px solid rgba(255,255,255,0.25);
+      border-radius:12px;padding:13px;color:white;font-size:13px;cursor:pointer;
     }
-    .settings-panel.open { display: block; animation: slideDown 0.3s ease; }
-    .settings-panel label { font-weight: 700; font-size: 13px; color: #333; display: block; margin-bottom: 8px; }
-    .settings-panel input {
-      width: 100%; padding: 10px; border-radius: 8px;
-      border: 2px solid #e5e7eb; font-family: monospace;
-      font-size: 14px;
+    .settings-panel{margin-top:12px;background:white;border-radius:14px;padding:16px;display:none}
+    .settings-panel.open{display:block;animation:slideDown 0.3s ease}
+    .settings-panel label{font-weight:700;font-size:13px;color:#333;display:block;margin-bottom:8px}
+    .settings-panel input{
+      width:100%;padding:10px;border-radius:8px;
+      border:2px solid #e5e7eb;font-family:monospace;font-size:14px;
     }
-    .settings-panel small { color: #888; font-size: 11px; margin-top: 6px; display: block; }
-
-    /* Animations */
-    @keyframes glow {
-      0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,0.4); }
-      50% { text-shadow: 0 0 35px rgba(255,255,255,0.9); }
+    .settings-panel small{color:#888;font-size:11px;margin-top:6px;display:block}
+    .device-btn:active{transform:scale(0.97)!important}
+    .all-btn:active{transform:scale(0.97)}
+    .mic-btn:active:not(.listening){transform:scale(0.93)!important}
+    @keyframes glow{
+      0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.4)}
+      50%{text-shadow:0 0 35px rgba(255,255,255,0.9)}
     }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1.1); }
-      50% { transform: scale(1.18); }
+    @keyframes pulse{
+      0%,100%{transform:scale(1.1)}
+      50%{transform:scale(1.18)}
     }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes slideDown{
+      from{opacity:0;transform:translateY(-8px)}
+      to{opacity:1;transform:translateY(0)}
     }
-    @keyframes fadeIn {
-      from { opacity: 0; } to { opacity: 1; }
-    }
-    .fade-in { animation: fadeIn 0.4s ease; }
-
-    /* Active press effect */
-    .device-btn:active { transform: scale(0.97) !important; }
-    .all-btn:active { transform: scale(0.97); }
-    .mic-btn:active { transform: scale(0.93) !important; }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
-  <div class="moon">🌙</div>
+  <span class="moon">🌙</span>
   <h1>Luna</h1>
   <p>Your Smart Home Assistant</p>
-  <div>
-    <span class="status-dot" id="statusDot" style="background:#f87171;"></span>
+  <div class="status-row">
+    <div class="status-dot" id="statusDot" style="background:#f87171"></div>
     <span class="status-text" id="statusText">Offline — Turn on hotspot</span>
   </div>
 </div>
 
-<!-- Message -->
 <div class="message-box">
   <p id="lunaMsg">Hey there! I'm Luna 🌙</p>
 </div>
 
-<!-- Mic -->
 <div class="mic-section">
   <button class="mic-btn" id="micBtn" onclick="handleVoice()">
     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -160,18 +134,18 @@
     </svg>
   </button>
   <p class="mic-label" id="micLabel">Tap to speak to Luna</p>
+  <div class="timer-bar" id="timerBar" style="display:none">
+    <div class="timer-fill" id="timerFill"></div>
+  </div>
 </div>
 
-<!-- Devices -->
 <div class="devices" id="devicesGrid"></div>
 
-<!-- All controls -->
 <div class="all-controls">
   <button class="all-btn all-on" onclick="controlAll(true)">🟢 All ON</button>
   <button class="all-btn all-off" onclick="controlAll(false)">🔴 All OFF</button>
 </div>
 
-<!-- Settings -->
 <button class="settings-btn" onclick="toggleSettings()">⚙️ Settings</button>
 <div class="settings-panel" id="settingsPanel">
   <label>NodeMCU IP Address:</label>
@@ -180,221 +154,334 @@
 </div>
 
 <script>
-  // ============================================
-  // LUNA SMART HOME - Configuration
-  // ============================================
-  let nodeIP = "192.168.43.150";
-  let deviceStates = { 1: false, 2: false, 3: false, 4: false };
-  let isConnected = false;
-  let settingsOpen = false;
+// ============================================
+// LUNA SMART HOME - Final Version
+// ============================================
+let nodeIP = "192.168.43.150";
+let deviceStates = {1:false,2:false,3:false,4:false};
+let isConnected = false;
+let settingsOpen = false;
+let alwaysListening = false;
+let currentRec = null;
+let timerInterval = null;
+const LISTEN_DURATION = 60000; // 60 seconds max per session
 
-  const DEVICES = {
-    1: { name: "Main Light",   emoji: "💡", color: "#FFD700", keywords: ["light","bulb","main light","main"] },
-    2: { name: "Fan",          emoji: "🌀", color: "#4A9EFF", keywords: ["fan"] },
-    3: { name: "Socket Board", emoji: "🔌", color: "#FF6B6B", keywords: ["socket","charger","plug","board"] },
-    4: { name: "Table Light",  emoji: "🕯️", color: "#9D84FF", keywords: ["table","soft","table light","soft light","desk"] },
-  };
+const LUNA_KEY = atob("c2stYW50LWFwaTAzLTJMYS01OVZONTVKRm15azRQenpMa3RiTEdyZHJuY1pITDRYQlhoeFVWUjFwVjM0Z2JqSnBKcFY3cW9yTjh0MnI0V01RZ2Q4UUJnRUQzdE9SMVFfd1JrQS16R241N1FBQQ==");
 
-  const RESPONSES = {
-    on:      ["You got it, boss! {d} is ON! ✨","Done! {d} powered up! ⚡","{d} is ON! Anything else? 😊","Turning on {d} for you! 💫"],
-    off:     ["{d} is OFF! Hope you're not scared of the dark 😏","Powered down {d}! 🌙","Alright, {d} OFF! ✓","Lights out for {d}! 😴"],
-    all_on:  ["Everything's ON! Party time! 🎉","Full power mode! ⚡⚡","All devices ON, boss! 💪"],
-    all_off: ["All OFF! Time to sleep? 😴","Saving energy! 🌱","Goodnight mode! 🌙✨"],
-    error:   ["Can't reach devices 😅 Check hotspot?","Connection issue... Try again? 🤔"],
-    listen:  ["I'm listening... 👂","Go ahead, I'm all ears! 👂"],
-    connect: ["Hey! I'm online and ready! 🚀","Connected! Your home is now smart! 🏠✨"],
-    offline: ["I'm offline 😴 Turn on hotspot first!"],
-    nodev:   ["Which device? Say fan, light, socket, or table light 🤔"],
-  };
+const DEVICES = {
+  1:{name:"Main Light",emoji:"💡",color:"#FFD700",keywords:["light","bulb","main light","main"]},
+  2:{name:"Fan",emoji:"🌀",color:"#4A9EFF",keywords:["fan"]},
+  3:{name:"Socket Board",emoji:"🔌",color:"#FF6B6B",keywords:["socket","charger","plug","board"]},
+  4:{name:"Desk Board",emoji:"🕯️",color:"#9D84FF",keywords:["table","soft","desk","table light","soft light","desk light"]},
+};
 
-  function pick(type, d="") {
-    const arr = RESPONSES[type];
-    return arr[Math.floor(Math.random()*arr.length)].replace("{d}", d);
+const LUNA_SYSTEM = `You are Luna, a smart, fun, sassy and caring AI smart home assistant for Perfect's room. You have a real personality - warm, funny, slightly sassy but always helpful. Never mention Claude or Anthropic - you are Luna!
+
+Perfect's devices:
+1 = Main Light (main room ceiling light)
+2 = Fan (main room ceiling fan)
+3 = Socket Board (main switchboard sockets)
+4 = Desk Board (desk light + desk socket together)
+
+Understand EVERYTHING - direct and indirect commands:
+- "wake up Luna" / "good morning" / "I'm back" / "I'm home" → turn on light + fan (devices 1,2)
+- "good night Luna" / "bye bye Luna" / "go to sleep" / "I'm leaving" / "sleep mode" → turn off everything
+- "it's dark" / "I can't see" / "why is it so dark" → turn on main light
+- "it's hot" / "feeling hot" / "so hot" → turn on fan
+- "I'm studying" / "doing homework" / "study mode" → turn on light + desk board (1,4)
+- "chill mode" / "relax" → desk board only (4 on, 1 off)
+- "movie mode" → fan on, main light off, desk board on
+- "everything on" / "all on" → all devices on
+- "everything off" / "all off" → all devices off
+- Casual chat ("how are you", "what's up") → just reply with personality, no device changes
+- Simultaneous mixed: "turn on fan and turn off light" → both happen at same time
+
+ALWAYS respond ONLY in this exact JSON format (nothing before or after):
+{"actions":[{"device":1,"state":true}],"message":"Luna's fun sassy response"}
+
+Rules:
+- actions can be empty [] for casual chat
+- message: fun, warm, sassy - max 2 sentences
+- Handle ALL commands intelligently
+- Current device states will be provided`;
+
+const RESPONSES = {
+  connect:["Hey! I'm online and ready! 🚀","Connected! Your home is now smart! 🏠✨"],
+  error:["Can't reach devices 😅 Check hotspot?","Connection issue... Try again? 🤔"],
+  listen:["I'm listening... 👂","Go ahead boss! 👂"],
+  offline:["I'm offline 😴 Turn on hotspot first!"],
+  nodev:["Which device? Say fan, light, socket, or desk 🤔"],
+};
+
+function pick(type,d=""){
+  const arr=RESPONSES[type];
+  return arr[Math.floor(Math.random()*arr.length)].replace("{d}",d);
+}
+
+function setMsg(text){
+  const el=document.getElementById("lunaMsg");
+  el.style.opacity=0;
+  setTimeout(()=>{el.textContent=text;el.style.opacity=1;el.style.transition="opacity 0.3s"},150);
+}
+
+// ============================================
+// Device Grid
+// ============================================
+function buildGrid(){
+  const grid=document.getElementById("devicesGrid");
+  grid.innerHTML="";
+  for(const [id,dev] of Object.entries(DEVICES)){
+    const on=deviceStates[id];
+    const btn=document.createElement("button");
+    btn.className="device-btn"+(on?" on":"");
+    btn.id="dev-"+id;
+    btn.style.background=on?`linear-gradient(135deg,${dev.color}cc,${dev.color})`:"rgba(255,255,255,0.12)";
+    btn.style.boxShadow=on?`0 6px 20px ${dev.color}55`:"none";
+    btn.innerHTML=`
+      <span class="device-emoji">${dev.emoji}</span>
+      <span class="device-name">${dev.name}</span>
+      <span class="device-status">${on?"ON":"OFF"}</span>`;
+    btn.onclick=()=>control(parseInt(id),!deviceStates[id]);
+    grid.appendChild(btn);
   }
+}
 
-  function setMsg(text) {
-    const el = document.getElementById("lunaMsg");
-    el.style.opacity = 0;
-    setTimeout(() => { el.textContent = text; el.style.opacity = 1; el.style.transition = "opacity 0.3s"; }, 150);
-  }
+function updateDeviceUI(id,on){
+  deviceStates[id]=on;
+  const btn=document.getElementById("dev-"+id);
+  if(!btn)return;
+  const dev=DEVICES[id];
+  btn.className="device-btn"+(on?" on":"");
+  btn.style.background=on?`linear-gradient(135deg,${dev.color}cc,${dev.color})`:"rgba(255,255,255,0.12)";
+  btn.style.boxShadow=on?`0 6px 20px ${dev.color}55`:"none";
+  btn.querySelector(".device-status").textContent=on?"ON":"OFF";
+}
 
-  // ============================================
-  // Device Grid - Build UI
-  // ============================================
-  function buildGrid() {
-    const grid = document.getElementById("devicesGrid");
-    grid.innerHTML = "";
-    for (const [id, dev] of Object.entries(DEVICES)) {
-      const on = deviceStates[id];
-      const btn = document.createElement("button");
-      btn.className = "device-btn" + (on ? " on" : "");
-      btn.id = "dev-" + id;
-      btn.style.background = on
-        ? `linear-gradient(135deg, ${dev.color}cc, ${dev.color})`
-        : "rgba(255,255,255,0.12)";
-      btn.style.boxShadow = on ? `0 6px 20px ${dev.color}55` : "none";
-      btn.innerHTML = `
-        <span class="device-emoji">${dev.emoji}</span>
-        <span class="device-name">${dev.name}</span>
-        <span class="device-status">${on ? "ON" : "OFF"}</span>
-      `;
-      btn.onclick = () => control(parseInt(id), !deviceStates[id]);
-      grid.appendChild(btn);
-    }
-  }
-
-  function updateDeviceUI(id, on) {
-    deviceStates[id] = on;
-    const btn = document.getElementById("dev-" + id);
-    if (!btn) return;
-    const dev = DEVICES[id];
-    btn.className = "device-btn" + (on ? " on" : "");
-    btn.style.background = on
-      ? `linear-gradient(135deg, ${dev.color}cc, ${dev.color})`
-      : "rgba(255,255,255,0.12)";
-    btn.style.boxShadow = on ? `0 6px 20px ${dev.color}55` : "none";
-    btn.querySelector(".device-status").textContent = on ? "ON" : "OFF";
-  }
-
-  // ============================================
-  // Connection
-  // ============================================
-  async function pingDevice() {
-    try {
-      const r = await fetch(`http://${nodeIP}/status`, { signal: AbortSignal.timeout(3000) });
-      const d = await r.json();
-      if (d.connected) {
-        if (!isConnected) {
-          setMsg(pick("connect"));
-          document.getElementById("statusDot").style.background = "#4ade80";
-          document.getElementById("statusDot").style.boxShadow = "0 0 8px #4ade80";
-          document.getElementById("statusText").textContent = "Connected";
-        }
-        isConnected = true;
-        [1,2,3,4].forEach(i => updateDeviceUI(i, d["relay"+i]));
+// ============================================
+// Connection
+// ============================================
+async function pingDevice(){
+  try{
+    const r=await fetch(`http://${nodeIP}/status`,{signal:AbortSignal.timeout(3000)});
+    const d=await r.json();
+    if(d.connected){
+      if(!isConnected){
+        setMsg(pick("connect"));
+        document.getElementById("statusDot").style.cssText="background:#4ade80;box-shadow:0 0 8px #4ade80";
+        document.getElementById("statusText").textContent="Connected";
       }
-    } catch {
-      if (isConnected) {
-        document.getElementById("statusDot").style.background = "#f87171";
-        document.getElementById("statusDot").style.boxShadow = "none";
-        document.getElementById("statusText").textContent = "Offline — Turn on hotspot";
+      isConnected=true;
+      [1,2,3,4].forEach(i=>updateDeviceUI(i,d["relay"+i]));
+    }
+  }catch{
+    if(isConnected){
+      document.getElementById("statusDot").style.cssText="background:#f87171;box-shadow:none";
+      document.getElementById("statusText").textContent="Offline — Turn on hotspot";
+    }
+    isConnected=false;
+  }
+}
+
+// ============================================
+// Control
+// ============================================
+async function control(id,on){
+  try{
+    await fetch(`http://${nodeIP}/control?device=${id}&state=${on?"on":"off"}`);
+    updateDeviceUI(id,on);
+  }catch{
+    setMsg(pick("error"));
+  }
+}
+
+async function controlAll(on){
+  try{
+    await fetch(`http://${nodeIP}/${on?"allon":"alloff"}`);
+    [1,2,3,4].forEach(i=>updateDeviceUI(i,on));
+    setMsg(on?"Everything's ON! Party time! 🎉":"All OFF! Goodnight! 🌙");
+  }catch{
+    setMsg(pick("error"));
+  }
+}
+
+// ============================================
+// AI Brain
+// ============================================
+let conversationHistory=[];
+
+async function processCommand(cmd){
+  setMsg("Luna is thinking... 🧠✨");
+
+  conversationHistory.push({role:"user",content:cmd});
+  if(conversationHistory.length>10) conversationHistory=conversationHistory.slice(-10);
+
+  const stateContext=Object.entries(DEVICES).map(([id,dev])=>
+    `${dev.name}:${deviceStates[id]?"ON":"OFF"}`).join(", ");
+
+  try{
+    const response=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":LUNA_KEY,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:150,
+        system:LUNA_SYSTEM+`\n\nCurrent states: ${stateContext}`,
+        messages:conversationHistory
+      })
+    });
+
+    const data=await response.json();
+    if(data.error){fallbackCommand(cmd);return;}
+
+    const text=data.content[0].text.trim();
+    conversationHistory.push({role:"assistant",content:text});
+
+    let result;
+    try{result=JSON.parse(text);}
+    catch{
+      const match=text.match(/\{[\s\S]*\}/);
+      result=match?JSON.parse(match[0]):null;
+    }
+
+    if(result){
+      if(result.actions&&result.actions.length>0){
+        await Promise.all(result.actions.map(a=>control(a.device,a.state)));
       }
-      isConnected = false;
+      setMsg(result.message||"Done! ✨");
+    }else{
+      fallbackCommand(cmd);
     }
+  }catch(err){
+    fallbackCommand(cmd);
+  }
+}
+
+function fallbackCommand(cmd){
+  const isOn=cmd.includes("on")&&!cmd.includes("off");
+  const isOff=cmd.includes("off")&&!cmd.includes("on");
+  const isAll=cmd.includes("all")||cmd.includes("every")||cmd.includes("everything");
+  if(isAll){
+    if(isOff){controlAll(false);return;}
+    if(isOn){controlAll(true);return;}
+  }
+  const found=[];
+  for(const [id,dev] of Object.entries(DEVICES)){
+    if(dev.keywords.some(k=>cmd.includes(k)))found.push(parseInt(id));
+  }
+  if(found.length>0){
+    found.forEach(id=>control(id,!isOff));
+    if(found.length>1)setMsg("Got it! Handling multiple devices! 🎉");
+  }else{
+    setMsg(pick("nodev"));
+  }
+}
+
+// ============================================
+// Voice - Always Listening with Timer Bar
+// ============================================
+function handleVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setMsg("Open in Chrome browser for voice! 🌐");return;}
+
+  if(alwaysListening){
+    // STOP
+    alwaysListening=false;
+    if(currentRec){try{currentRec.stop();}catch(e){} currentRec=null;}
+    clearInterval(timerInterval);
+    document.getElementById("micBtn").classList.remove("listening");
+    document.getElementById("micLabel").textContent="Tap to speak to Luna";
+    document.getElementById("timerBar").style.display="none";
+    setMsg("Luna is resting 😴 Tap mic to wake me up!");
+    return;
   }
 
-  // ============================================
-  // Control
-  // ============================================
-  async function control(id, on) {
-    try {
-      await fetch(`http://${nodeIP}/control?device=${id}&state=${on?"on":"off"}`);
-      updateDeviceUI(id, on);
-      setMsg(pick(on?"on":"off", DEVICES[id].name));
-    } catch {
-      setMsg(pick("error"));
-    }
-  }
+  // START
+  alwaysListening=true;
+  startListeningSession(SR);
+}
 
-  async function controlAll(on) {
-    try {
-      await fetch(`http://${nodeIP}/${on?"allon":"alloff"}`);
-      [1,2,3,4].forEach(i => updateDeviceUI(i, on));
-      setMsg(pick(on?"all_on":"all_off"));
-    } catch {
-      setMsg(pick("error"));
-    }
-  }
+function startListeningSession(SR){
+  if(!alwaysListening)return;
 
-  // ============================================
-  // Voice Control
-  // ============================================
-  function handleVoice() {
-    if (!isConnected) { setMsg(pick("offline")); return; }
+  const micBtn=document.getElementById("micBtn");
+  const micLabel=document.getElementById("micLabel");
+  const timerBar=document.getElementById("timerBar");
+  const timerFill=document.getElementById("timerFill");
 
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      setMsg("Voice not supported here. Please open in Chrome browser! 🌐");
-      return;
-    }
+  micBtn.classList.add("listening");
+  micLabel.textContent="🔴 Always listening... tap to stop";
+  timerBar.style.display="block";
+  timerFill.style.width="100%";
+  timerFill.style.transition=`width ${LISTEN_DURATION}ms linear`;
+  setTimeout(()=>{timerFill.style.width="0%"},50);
 
-    const rec = new SR();
-    rec.lang = "en-IN";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
+  const rec=new SR();
+  currentRec=rec;
+  rec.lang="en-IN";
+  rec.interimResults=false;
+  rec.maxAlternatives=1;
+  rec.continuous=true; // Keep listening continuously!
 
-    const micBtn = document.getElementById("micBtn");
-    const micLabel = document.getElementById("micLabel");
-
-    micBtn.classList.add("listening");
-    micLabel.textContent = "Listening...";
-    setMsg(pick("listen"));
-
-    rec.onresult = (e) => {
-      const cmd = e.results[0][0].transcript.toLowerCase();
-      micBtn.classList.remove("listening");
-      micLabel.textContent = "Tap to speak to Luna";
+  rec.onresult=(e)=>{
+    const cmd=e.results[e.results.length-1][0].transcript.toLowerCase();
+    if(!isConnected){
+      setMsg(`I heard: "${cmd}" 👂 Connect NodeMCU to control devices!`);
+    }else{
       processCommand(cmd);
-    };
+    }
+    // Reset timer bar
+    timerFill.style.transition="none";
+    timerFill.style.width="100%";
+    setTimeout(()=>{
+      timerFill.style.transition=`width ${LISTEN_DURATION}ms linear`;
+      setTimeout(()=>{timerFill.style.width="0%"},50);
+    },100);
+  };
 
-    rec.onerror = () => {
+  rec.onerror=(e)=>{
+    if(e.error==="no-speech"||e.error==="aborted")return;
+    if(e.error==="not-allowed"){
+      setMsg("Microphone permission denied! Allow mic in Chrome settings 🎤");
+      alwaysListening=false;
       micBtn.classList.remove("listening");
-      micLabel.textContent = "Tap to speak to Luna";
-      setMsg("Didn't catch that! Try again? 🤔");
-    };
+      micLabel.textContent="Tap to speak to Luna";
+      timerBar.style.display="none";
+    }
+  };
 
-    rec.onend = () => {
+  rec.onend=()=>{
+    if(alwaysListening){
+      setTimeout(()=>startListeningSession(SR),200);
+    }else{
       micBtn.classList.remove("listening");
-      micLabel.textContent = "Tap to speak to Luna";
-    };
-
-    rec.start();
-  }
-
-  function processCommand(cmd) {
-    const isOn  = cmd.includes("on")  && !cmd.includes("off");
-    const isOff = cmd.includes("off") && !cmd.includes("on");
-    const isAll = cmd.includes("all") || cmd.includes("every") || cmd.includes("everything");
-
-    if (isAll) {
-      if (isOff) { controlAll(false); return; }
-      if (isOn)  { controlAll(true);  return; }
+      micLabel.textContent="Tap to speak to Luna";
+      timerBar.style.display="none";
     }
+  };
 
-    const found = [];
-    for (const [id, dev] of Object.entries(DEVICES)) {
-      if (dev.keywords.some(k => cmd.includes(k))) found.push(parseInt(id));
-    }
-
-    if (found.length > 0) {
-      const turnOn = !isOff;
-      found.forEach(id => control(id, turnOn));
-      if (found.length > 1) {
-        const names = found.map(id => DEVICES[id].name).join(", ");
-        setMsg(`Handling: ${names}! 🎉`);
-      }
-    } else {
-      setMsg(pick("nodev"));
-    }
+  try{rec.start();}
+  catch(e){
+    if(alwaysListening)setTimeout(()=>startListeningSession(SR),500);
   }
+}
 
-  // ============================================
-  // Settings toggle
-  // ============================================
-  function toggleSettings() {
-    settingsOpen = !settingsOpen;
-    const panel = document.getElementById("settingsPanel");
-    panel.classList.toggle("open", settingsOpen);
-    document.querySelector(".settings-btn").textContent =
-      (settingsOpen ? "⚙️ Hide Settings" : "⚙️ Settings");
-  }
+function toggleSettings(){
+  settingsOpen=!settingsOpen;
+  document.getElementById("settingsPanel").classList.toggle("open",settingsOpen);
+  document.querySelector(".settings-btn").textContent=settingsOpen?"⚙️ Hide Settings":"⚙️ Settings";
+}
 
-  // ============================================
-  // Init
-  // ============================================
-  buildGrid();
-  pingDevice();
-  setInterval(pingDevice, 5000);
+// ============================================
+// Init
+// ============================================
+buildGrid();
+pingDevice();
+setInterval(pingDevice,5000);
 </script>
 </body>
 </html>
